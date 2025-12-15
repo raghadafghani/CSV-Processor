@@ -1,0 +1,147 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: csv-processor
+  namespace: k8s-raghadafghani
+  labels:
+    app.kubernetes.io/name: csv-processor
+    app.kubernetes.io/instance: production
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/component: application
+    app.kubernetes.io/part-of: csv-processor-suite
+    app.kubernetes.io/managed-by: kubectl
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: csv-processor
+      app.kubernetes.io/instance: production
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: csv-processor
+        app.kubernetes.io/instance: production
+        app.kubernetes.io/version: "1.0.0"
+        app.kubernetes.io/component: application
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/health"
+    spec:
+      containers:
+      - name: csv-processor
+        image: ghcr.io/raghadafghani/csv-processor:main
+        imagePullPolicy: Always
+        ports:
+        - name: http
+          containerPort: 8000
+          protocol: TCP
+        
+        # Environment variables from ConfigMap
+        envFrom:
+        - configMapRef:
+            name: csv-processor-config
+        
+        # Environment variables from Secret
+        env:
+        - name: APP_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: csv-processor-secrets
+              key: APP_SECRET_KEY
+        
+        # Resource requests and limits
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        
+        # Liveness probe - checks if container is alive
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        
+        # Readiness probe - checks if container is ready to serve traffic
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 3
+        
+        # Startup probe - gives container time to start up
+        startupProbe:
+          httpGet:
+            path: /health
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 10
+        
+        # Security context
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1001
+          runAsGroup: 1001
+          readOnlyRootFilesystem: false
+          capabilities:
+            drop:
+            - ALL
+        
+        # Volume mounts (if needed for temporary files)
+        volumeMounts:
+        - name: tmp-volume
+          mountPath: /tmp
+        - name: app-cache
+          mountPath: /app/cache
+      
+      # Volumes
+      volumes:
+      - name: tmp-volume
+        emptyDir: {}
+      - name: app-cache
+        emptyDir:
+          sizeLimit: 1Gi
+      
+      # Security context for the pod
+      securityContext:
+        fsGroup: 1001
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      
+      # Restart policy
+      restartPolicy: Always
+      
+      # DNS policy
+      dnsPolicy: ClusterFirst
+      
+      # Termination grace period
+      terminationGracePeriodSeconds: 30
+      
+      # Image pull secrets (if using private registry)
+      # imagePullSecrets:
+      # - name: ghcr-secret

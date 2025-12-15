@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: k8s-raghadafghani
+  labels:
+    app.kubernetes.io/name: csv-processor
+    app.kubernetes.io/instance: production
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/component: application
+    app.kubernetes.io/part-of: csv-processor-suite
+    app.kubernetes.io/managed-by: kubectl
+    environment: production
+    owner: raghadafghani
+  annotations:
+    description: "CSV Processor application namespace"
+    contact: "raghadafghani@example.com"

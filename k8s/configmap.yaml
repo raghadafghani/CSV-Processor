@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: csv-processor-config
+  namespace: k8s-raghadafghani
+  labels:
+    app.kubernetes.io/name: csv-processor
+    app.kubernetes.io/instance: production
+    app.kubernetes.io/component: configuration
+data:
+  # Application Environment
+  APP_ENV: "production"
+  
+  # Logging Configuration
+  LOG_LEVEL: "info"
+  
+  # Server Configuration
+  HOST: "0.0.0.0"
+  PORT: "8000"
+  DEBUG: "false"
+  
+  # CORS Configuration
+  CORS_ORIGINS: "*"
+  
+  # Static Files
+  STATIC_DIR: "static"
+  
+  # Application Settings
+  MAX_FILE_SIZE: "10485760"  # 10MB in bytes
+  ALLOWED_EXTENSIONS: "csv,txt"
+  
+  # Health Check Settings
+  HEALTH_CHECK_TIMEOUT: "30"
+  
+  # Performance Settings
+  WORKERS: "2"
+  WORKER_CONNECTIONS: "1000"
