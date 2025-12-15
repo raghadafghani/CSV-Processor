@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Processor</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>CSV Processor</h1>
+            <p>Process and transform your CSV files with ease</p>
+        </header>
+
+        <main class="main-content">
+            <div class="upload-section">
+                <div class="file-upload-area" id="upload-area">
+                    <input type="file" id="csv-file" accept=".csv" />
+                    <div class="upload-content">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        <p class="upload-text">Drop your CSV file here or click to browse</p>
+                        <p class="upload-hint" id="file-name"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls-section">
+                <div class="control-group">
+                    <label for="csv-operation">Operation</label>
+                    <select id="csv-operation" class="select-input">
+                        <option value="view">View All</option>
+                        <option value="filter">Filter Rows</option>
+                        <option value="transform">Transform Column</option>
+                        <option value="aggregate">Aggregate</option>
+                        <option value="sort">Sort</option>
+                    </select>
+                </div>
+
+                <div id="filter-options" class="option-group" style="display: none;">
+                    <div class="control-group">
+                        <label for="filter-column">Column Name</label>
+                        <input type="text" id="filter-column" class="text-input" placeholder="e.g., name, age">
+                    </div>
+                    <div class="control-group">
+                        <label for="filter-value">Filter Value</label>
+                        <input type="text" id="filter-value" class="text-input" placeholder="Value to match">
+                    </div>
+                </div>
+
+                <div id="transform-options" class="option-group" style="display: none;">
+                    <div class="control-group">
+                        <label for="transform-column">Column Name</label>
+                        <input type="text" id="transform-column" class="text-input" placeholder="e.g., name">
+                    </div>
+                    <div class="control-group">
+                        <label for="transform-op">Transform Operation</label>
+                        <select id="transform-op" class="select-input">
+                            <option value="uppercase">Uppercase</option>
+                            <option value="lowercase">Lowercase</option>
+                            <option value="trim">Trim Whitespace</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="aggregate-options" class="option-group" style="display: none;">
+                    <div class="control-group">
+                        <label for="aggregate-column">Column Name</label>
+                        <input type="text" id="aggregate-column" class="text-input" placeholder="e.g., category">
+                    </div>
+                </div>
+
+                <div id="sort-options" class="option-group" style="display: none;">
+                    <div class="control-group">
+                        <label for="sort-column">Column Name</label>
+                        <input type="text" id="sort-column" class="text-input" placeholder="e.g., date">
+                    </div>
+                </div>
+
+                <button class="process-button" id="process-btn" onclick="processCSV()">
+                    <span>Process CSV</span>
+                </button>
+            </div>
+
+            <div id="result-section" class="result-section"></div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
