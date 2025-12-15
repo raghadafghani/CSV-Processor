@@ -429,8 +429,8 @@ jobs:
           
       - name: Debug deployment status
         run: |
-          echo "🔍 Checking deployment status..."
-          kubectl get deployment csv-processor -n k8s-raghadafghani -o wide
+          echo "🔍 Checking minimal deployment status..."
+          kubectl get deployment csv-processor-minimal -n k8s-raghadafghani -o wide
           echo ""
           echo "🔍 Checking pod status..."
           kubectl get pods -n k8s-raghadafghani -o wide
@@ -440,7 +440,6 @@ jobs:
           echo ""
           echo "🔍 Checking node resources..."
           kubectl top nodes || echo "Metrics not available"
-          kubectl describe nodes | grep -A 5 "Allocated resources" || echo "Node details not available"
           
       - name: Wait for pods to be created
         run: |
@@ -472,13 +471,13 @@ jobs:
           
       - name: Verify deployment
         run: |
-          echo "✅ Verifying deployment..."
-          kubectl get pods -l app.kubernetes.io/name=csv-processor -n k8s-raghadafghani -o wide
+          echo "✅ Verifying minimal deployment..."
+          kubectl get pods -l app=csv-processor-minimal -n k8s-raghadafghani -o wide
           kubectl get services -n k8s-raghadafghani
           
           echo ""
           echo "📋 Pod logs (last 50 lines):"
-          kubectl logs -l app.kubernetes.io/name=csv-processor -n k8s-raghadafghani --tail=50 || echo "No logs available yet"
+          kubectl logs -l app=csv-processor-minimal -n k8s-raghadafghani --tail=50 || echo "No logs available yet"
           
       - name: Get deployment info
         run: |
@@ -489,11 +488,11 @@ jobs:
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           echo "### Deployment Details:" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          kubectl get deployment csv-processor -n k8s-raghadafghani -o wide >> $GITHUB_STEP_SUMMARY
+          kubectl get deployment csv-processor-minimal -n k8s-raghadafghani -o wide >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           echo "### Pods:" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          kubectl get pods -l app.kubernetes.io/name=csv-processor -n k8s-raghadafghani >> $GITHUB_STEP_SUMMARY
+          kubectl get pods -l app=csv-processor-minimal -n k8s-raghadafghani >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           echo "### Services:" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
