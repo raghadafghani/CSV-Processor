@@ -280,15 +280,32 @@ jobs:
           echo "Pushing images to registry..."
           # Get normalized image name
           IMAGE_NAME_LOWER=$(echo "${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]')
+          
+          # List available images to see what tags exist
+          echo "Available images:"
+          docker images | grep "$IMAGE_NAME_LOWER"
+          
+          # Push the latest tag (we know this exists)
           docker push ${{ env.REGISTRY }}/${IMAGE_NAME_LOWER}:latest
-          docker push ${{ env.REGISTRY }}/${IMAGE_NAME_LOWER}:main-${{ github.sha }}
+          
+          # Push the main tag (we know this exists)
+          docker push ${{ env.REGISTRY }}/${IMAGE_NAME_LOWER}:main
+          
+          # Try to push the SHA tag if it exists
+          SHA_TAG="${{ env.REGISTRY }}/${IMAGE_NAME_LOWER}:main-${{ github.sha }}"
+          if docker images --format "table {{.Repository}}:{{.Tag}}" | grep -q "${IMAGE_NAME_LOWER}:main-${{ github.sha }}"; then
+            echo "Pushing SHA tag: $SHA_TAG"
+            docker push "$SHA_TAG"
+          else
+            echo "SHA tag not found, skipping"
+          fi
           
       - name: Generate deployment summary
         run: |
           IMAGE_NAME_LOWER=$(echo "${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]')
           echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
           echo "- **Image**: \`${{ env.REGISTRY }}/${IMAGE_NAME_LOWER}:latest\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **SHA Tag**: \`${{ env.REGISTRY }}/${IMAGE_NAME_LOWER}:main-${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Main Tag**: \`${{ env.REGISTRY }}/${IMAGE_NAME_LOWER}:main\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Registry**: GitHub Container Registry" >> $GITHUB_STEP_SUMMARY
 
   # Stage 6: Deploy to EKS
@@ -345,7 +362,7 @@ jobs:
               spec:
                 containers:
                 - name: csv-processor
-                  image: ${{ env.REGISTRY }}/${IMAGE_NAME_LOWER}:main-${{ github.sha }}
+                  image: ${{ env.REGISTRY }}/${IMAGE_NAME_LOWER}:main
                   ports:
                   - containerPort: 8000
                   env:
