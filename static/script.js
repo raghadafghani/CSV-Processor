@@ -112,28 +112,33 @@ async function processCSV() {
     processBtn.disabled = true;
     
     try {
-        console.log('Making request to:', `${API_URL}/api/process/csv`);
         const response = await fetch(`${API_URL}/api/process/csv`, {
             method: 'POST',
-            body: formData
+            body: formData,
+            mode: 'cors',
+            credentials: 'same-origin'
         });
         
-        console.log('Response status:', response.status);
-        console.log('Response ok:', response.ok);
-        
         if (!response.ok) {
-            const error = await response.json();
-            console.log('Error response:', error);
-            throw new Error(error.detail || 'Processing failed');
+            let errorMessage = 'Processing failed';
+            try {
+                const error = await response.json();
+                errorMessage = error.detail || errorMessage;
+            } catch (e) {
+                errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+            }
+            throw new Error(errorMessage);
         }
         
         const data = await response.json();
-        console.log('Success data:', data);
         currentData = data;
         displayCSVResult(data, operation);
     } catch (error) {
-        console.error('Fetch error:', error);
-        resultDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+        let errorMessage = error.message;
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+            errorMessage = 'Network error: Unable to connect to server';
+        }
+        resultDiv.innerHTML = `<div class="error">Error: ${errorMessage}</div>`;
     } finally {
         processBtn.disabled = false;
     }
