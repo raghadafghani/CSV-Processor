@@ -123,11 +123,19 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
         
+      - name: Normalize image name
+        id: normalize
+        run: |
+          # Convert repository name to lowercase for Docker compatibility
+          IMAGE_NAME_LOWER=$(echo "${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]')
+          echo "image-name=$IMAGE_NAME_LOWER" >> $GITHUB_OUTPUT
+          echo "Normalized image name: $IMAGE_NAME_LOWER"
+        
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ steps.normalize.outputs.image-name }}
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -270,14 +278,17 @@ jobs:
       - name: Push Docker image
         run: |
           echo "Pushing images to registry..."
-          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main-${{ github.sha }}
+          # Get normalized image name
+          IMAGE_NAME_LOWER=$(echo "${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]')
+          docker push ${{ env.REGISTRY }}/${IMAGE_NAME_LOWER}:latest
+          docker push ${{ env.REGISTRY }}/${IMAGE_NAME_LOWER}:main-${{ github.sha }}
           
       - name: Generate deployment summary
         run: |
+          IMAGE_NAME_LOWER=$(echo "${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]')
           echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
-          echo "- **Image**: \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **SHA Tag**: \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main-${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Image**: \`${{ env.REGISTRY }}/${IMAGE_NAME_LOWER}:latest\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **SHA Tag**: \`${{ env.REGISTRY }}/${IMAGE_NAME_LOWER}:main-${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Registry**: GitHub Container Registry" >> $GITHUB_STEP_SUMMARY
 
   # Stage 6: Deploy to EKS
@@ -313,6 +324,8 @@ jobs:
       - name: Create Kubernetes manifests
         run: |
           mkdir -p k8s
+          # Normalize image name for Docker compatibility
+          IMAGE_NAME_LOWER=$(echo "${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]')
           cat > k8s/deployment.yaml << EOF
           apiVersion: apps/v1
           kind: Deployment
@@ -332,7 +345,7 @@ jobs:
               spec:
                 containers:
                 - name: csv-processor
-                  image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main-${{ github.sha }}
+                  image: ${{ env.REGISTRY }}/${IMAGE_NAME_LOWER}:main-${{ github.sha }}
                   ports:
                   - containerPort: 8000
                   env:
