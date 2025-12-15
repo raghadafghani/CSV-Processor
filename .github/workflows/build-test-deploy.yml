@@ -416,9 +416,12 @@ jobs:
           # Update the image tag in deployment.yaml to use the latest built image
           sed -i "s|ghcr.io/raghadafghani/csv-processor:main|${{ env.REGISTRY }}/${IMAGE_NAME_LOWER}:main|g" k8s/deployment.yaml
           
-      - name: Clean up pending pods
+      - name: Scale down and clean up
         run: |
-          echo "🧹 Cleaning up any pending pods..."
+          echo "🧹 Scaling down existing deployment and cleaning pending pods..."
+          # Scale down existing deployment to 0 (stops creating new pods)
+          kubectl scale deployment csv-processor --replicas=0 -n k8s-raghadafghani --ignore-not-found=true
+          # Delete pending pods
           kubectl delete pods --field-selector=status.phase=Pending -n k8s-raghadafghani --ignore-not-found=true
           sleep 10
           
@@ -430,7 +433,7 @@ jobs:
           kubectl apply -f k8s/namespace.yaml
           kubectl apply -f k8s/configmap.yaml
           kubectl apply -f k8s/secret.yaml
-          kubectl apply -f k8s/deployment.yaml
+          kubectl apply -f k8s/deployment-minimal.yaml
           kubectl apply -f k8s/service.yaml
           
       - name: Debug deployment status
@@ -469,21 +472,12 @@ jobs:
           
       - name: Wait for deployment rollout
         run: |
-          echo "⏳ Waiting for deployment to complete (3 minute timeout)..."
-          if ! kubectl rollout status deployment/csv-processor -n k8s-raghadafghani --timeout=180s; then
-            echo "❌ Main deployment failed, trying minimal deployment..."
-            
-            # Apply minimal deployment
-            kubectl apply -f k8s/deployment-minimal.yaml
-            
-            echo "⏳ Waiting for minimal deployment..."
-            kubectl rollout status deployment/csv-processor-minimal -n k8s-raghadafghani --timeout=180s
-            
-            echo "📊 Minimal deployment status:"
-            kubectl get pods -l app=csv-processor-minimal -n k8s-raghadafghani -o wide
-          else
-            echo "✅ Main deployment succeeded!"
-          fi
+          echo "⏳ Waiting for minimal deployment to complete (3 minute timeout)..."
+          kubectl rollout status deployment/csv-processor-minimal -n k8s-raghadafghani --timeout=180s
+          
+          echo "✅ Minimal deployment succeeded!"
+          echo "📊 Deployment status:"
+          kubectl get pods -l app=csv-processor-minimal -n k8s-raghadafghani -o wide
           
       - name: Verify deployment
         run: |
