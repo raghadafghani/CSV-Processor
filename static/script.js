@@ -74,6 +74,7 @@ async function processCSV() {
     if (operation === 'filter') {
         const column = document.getElementById('filter-column').value.trim();
         const value = document.getElementById('filter-value').value.trim();
+        console.log('Filter - Column:', column, 'Value:', value);
         if (!column || !value) {
             alert('Please enter both column name and filter value');
             return;
@@ -91,6 +92,7 @@ async function processCSV() {
         formData.append('transform_operation', op);
     } else if (operation === 'aggregate') {
         const column = document.getElementById('aggregate-column').value.trim();
+        console.log('Aggregate - Column:', column);
         if (!column) {
             alert('Please enter column name');
             return;
