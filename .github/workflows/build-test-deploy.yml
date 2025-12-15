@@ -416,15 +416,6 @@ jobs:
           # Update the image tag in deployment.yaml to use the latest built image
           sed -i "s|ghcr.io/raghadafghani/csv-processor:main|${{ env.REGISTRY }}/${IMAGE_NAME_LOWER}:main|g" k8s/deployment.yaml
           
-      - name: Scale down and clean up
-        run: |
-          echo "🧹 Scaling down existing deployment and cleaning pending pods..."
-          # Scale down existing deployment to 0 (stops creating new pods)
-          kubectl scale deployment csv-processor --replicas=0 -n k8s-raghadafghani --ignore-not-found=true
-          # Delete pending pods
-          kubectl delete pods --field-selector=status.phase=Pending -n k8s-raghadafghani --ignore-not-found=true
-          sleep 10
-          
       - name: Deploy to Kubernetes
         run: |
           echo "Applying Kubernetes manifests..."
