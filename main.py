@@ -64,12 +64,36 @@ async def health_check():
     return {"status": "healthy", "service": "CSV Processor"}
 
 
+def find_column_case_insensitive(rows: List[Dict], target_column: str) -> str:
+    """Find the actual column name in a case-insensitive way"""
+    if not rows:
+        return target_column
+    
+    available_columns = list(rows[0].keys())
+    target_lower = target_column.lower()
+    
+    # First try exact match
+    if target_column in available_columns:
+        return target_column
+    
+    # Then try case-insensitive match
+    for col in available_columns:
+        if col.lower() == target_lower:
+            return col
+    
+    # Return original if no match found
+    return target_column
+
+
 def process_csv_filter(rows: List[Dict], filter_column: str, filter_value: str) -> Dict[str, Any]:
     """Filter CSV rows based on column value"""
     if not rows:
         return {"rows": [], "count": 0, "columns": []}
     
-    filtered_rows = [row for row in rows if str(row.get(filter_column, "")) == str(filter_value)]
+    # Find the actual column name (case-insensitive)
+    actual_column = find_column_case_insensitive(rows, filter_column)
+    
+    filtered_rows = [row for row in rows if str(row.get(actual_column, "")) == str(filter_value)]
     return {
         "rows": filtered_rows,
         "count": len(filtered_rows),
@@ -82,14 +106,17 @@ def process_csv_transform(rows: List[Dict], transform_column: str, transform_ope
     if not rows:
         return {"rows": [], "count": 0, "columns": []}
     
+    # Find the actual column name (case-insensitive)
+    actual_column = find_column_case_insensitive(rows, transform_column)
+    
     for row in rows:
-        value = row.get(transform_column, "")
+        value = row.get(actual_column, "")
         if transform_operation == "uppercase":
-            row[transform_column] = str(value).upper()
+            row[actual_column] = str(value).upper()
         elif transform_operation == "lowercase":
-            row[transform_column] = str(value).lower()
+            row[actual_column] = str(value).lower()
         elif transform_operation == "trim":
-            row[transform_column] = str(value).strip()
+            row[actual_column] = str(value).strip()
     
     return {
         "rows": rows,
@@ -103,15 +130,18 @@ def process_csv_aggregate(rows: List[Dict], filter_column: str) -> Dict[str, Any
     if not rows:
         return {"aggregation": {}, "total_rows": 0, "column": filter_column}
     
+    # Find the actual column name (case-insensitive)
+    actual_column = find_column_case_insensitive(rows, filter_column)
+    
     counts = {}
     for row in rows:
-        key = str(row.get(filter_column, ""))
+        key = str(row.get(actual_column, ""))
         counts[key] = counts.get(key, 0) + 1
     
     return {
         "aggregation": counts,
         "total_rows": len(rows),
-        "column": filter_column
+        "column": actual_column
     }
 
 
@@ -120,7 +150,10 @@ def process_csv_sort(rows: List[Dict], filter_column: str) -> Dict[str, Any]:
     if not rows:
         return {"rows": [], "count": 0, "columns": []}
     
-    sorted_rows = sorted(rows, key=lambda x: str(x.get(filter_column, "")))
+    # Find the actual column name (case-insensitive)
+    actual_column = find_column_case_insensitive(rows, filter_column)
+    
+    sorted_rows = sorted(rows, key=lambda x: str(x.get(actual_column, "")))
     return {
         "rows": sorted_rows,
         "count": len(sorted_rows),

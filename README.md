@@ -4,34 +4,34 @@ A production-ready CSV processing web application with enterprise-grade CI/CD pi
 
 ## 🚀 Live Application
 
-**The CSV Processor is automatically deployed and accessible via LoadBalancer URL shown in GitHub Actions.**
+**🌐 Access the CSV Processor:** http://a424d066df9c54ab9bb097d96fdda4ee-1106723345.us-west-2.elb.amazonaws.com/static/index.html
+
 
 ## ✨ Features
 
 ### **CSV Processing Operations**
 
-- **📊 View**: Display all rows and columns from uploaded CSV files with clean table formatting
-- **🔍 Filter**: Filter rows based on specific column values (e.g., show only records where "Status" = "Active")
-- **🔄 Transform**: Modify column data with operations:
+- **View**: Display all rows and columns from uploaded CSV files with clean table formatting
+- **Filter**: Filter rows based on specific column values (e.g., show only records where "Status" = "Active")
+- **Transform**: Modify column data with operations:
   - **Uppercase**: Convert text to UPPERCASE
   - **Lowercase**: Convert text to lowercase
   - **Trim**: Remove leading/trailing whitespace
-- **📈 Aggregate**: Count occurrences and group data by column values (e.g., count how many records per category)
-- **🔢 Sort**: Sort entire dataset by any column in ascending order
+- **Aggregate**: Count occurrences and group data by column values (e.g., count how many records per category)
+- **Sort**: Sort entire dataset by any column in ascending order
 
 ### **User Experience**
-- **📁 Drag & Drop**: Intuitive file upload interface
-- **💾 Download**: Export processed results as CSV files
-- **🎨 Clean UI**: Apple-inspired minimalist design
-- **⚡ Fast Processing**: Efficient server-side CSV handling
+- **Drag & Drop**: Intuitive file upload interface
+- **Download**: Export processed results as CSV files
+- **Fast Processing**: Efficient server-side CSV handling
 
 ### **Enterprise Features**
-- **🚀 Production Ready**: Enterprise-grade deployment pipeline
-- **🔒 Secure**: Non-root containers with security scanning
-- **📊 Scalable**: Kubernetes orchestration with auto-scaling
-- **🔄 Zero Downtime**: Rolling updates with health checks
+- **Production Ready**: Enterprise-grade deployment pipeline
+- **Secure**: Non-root containers with security scanning
+- **Scalable**: Kubernetes orchestration with auto-scaling
+- **Zero Downtime**: Rolling updates with health checks
 
-## 🏗️ Architecture
+## Architecture
 
 ### **Application Stack**
 - **Backend**: Python FastAPI
@@ -74,7 +74,7 @@ k8s/
 └── service.yaml       # LoadBalancer access
 ```
 
-## 🔄 Automated Deployment
+## Automated Deployment
 
 **Zero-touch deployment:** Push code → Automatic deployment to production
 
@@ -86,7 +86,7 @@ k8s/
 5. **Deploy**: Rolling update to EKS cluster
 
 
-## 🛠️ Development
+## Development
 
 ### **Local Development:**
 ```bash
@@ -100,19 +100,7 @@ python main.py
 pytest -v --cov=.
 ```
 
-## 📊 Monitoring
-
-### **Health Check:**
-```bash
-curl http://your-loadbalancer-url/health
-```
-
-### **Kubernetes Status:**
-```bash
-kubectl get all -n k8s-raghadafghani
-```
-
-## 🔧 Configuration
+## Configuration
 
 Application configured via ConfigMap:
 - `APP_ENV=production`

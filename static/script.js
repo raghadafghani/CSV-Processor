@@ -30,12 +30,53 @@ uploadArea.addEventListener('drop', (e) => {
 fileInput.addEventListener('change', (e) => {
     if (e.target.files.length > 0) {
         updateFileName(e.target.files[0].name);
+        detectColumns(e.target.files[0]);
     }
 });
 
 function updateFileName(name) {
     fileName.textContent = name;
     fileName.style.color = '#007AFF';
+}
+
+// Detect column names from CSV file
+async function detectColumns(file) {
+    try {
+        const text = await file.text();
+        const lines = text.split('\n');
+        if (lines.length > 0) {
+            const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+            updateColumnOptions(headers);
+        }
+    } catch (error) {
+        console.log('Could not detect columns:', error);
+    }
+}
+
+// Update column input fields with detected columns
+function updateColumnOptions(columns) {
+    const columnHint = `Available columns: ${columns.join(', ')}`;
+    
+    // Update placeholders to show actual column names
+    document.getElementById('filter-column').placeholder = `e.g., ${columns[0] || 'column_name'}`;
+    document.getElementById('transform-column').placeholder = `e.g., ${columns[0] || 'column_name'}`;
+    document.getElementById('aggregate-column').placeholder = `e.g., ${columns[0] || 'column_name'}`;
+    document.getElementById('sort-column').placeholder = `e.g., ${columns[0] || 'column_name'}`;
+    
+    // Add column hints
+    const hintElements = document.querySelectorAll('.column-hint');
+    hintElements.forEach(el => el.remove()); // Remove existing hints
+    
+    const optionGroups = document.querySelectorAll('.option-group');
+    optionGroups.forEach(group => {
+        const hint = document.createElement('p');
+        hint.className = 'column-hint';
+        hint.style.fontSize = '12px';
+        hint.style.color = '#666';
+        hint.style.marginTop = '5px';
+        hint.textContent = columnHint;
+        group.appendChild(hint);
+    });
 }
 
 // Operation change handler
