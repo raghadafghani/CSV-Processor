@@ -1,5 +1,9 @@
 # CSV Processor
 
+[![Build, Test & Deploy](https://github.com/USERNAME/REPOSITORY/actions/workflows/build-test-deploy.yml/badge.svg)](https://github.com/USERNAME/REPOSITORY/actions/workflows/build-test-deploy.yml)
+[![Docker Image](https://ghcr-badge.egpl.dev/USERNAME/REPOSITORY/latest_tag?trim=major&label=Docker%20Image)](https://github.com/USERNAME/REPOSITORY/pkgs/container/REPOSITORY)
+[![Security Scan](https://github.com/USERNAME/REPOSITORY/actions/workflows/build-test-deploy.yml/badge.svg?event=push)](https://github.com/USERNAME/REPOSITORY/actions/workflows/build-test-deploy.yml)
+
 A clean, Apple-designed web application for processing CSV files. Built with Python FastAPI and a minimalist interface.
 
 ## Features
@@ -117,6 +121,40 @@ SigmaProject/
 - **Backend**: Python 3.8+, FastAPI
 - **Frontend**: HTML5, CSS3, JavaScript (Vanilla)
 - **Server**: Uvicorn
+
+## CI/CD Pipeline
+
+This project uses GitHub Actions for automated build, test, and deployment. The pipeline includes:
+
+- **🚀 Checkout & Setup**: Code checkout and Python environment setup
+- **🧪 Test**: Unit tests with coverage reporting
+- **🏗️ Build**: Docker image creation with multi-platform support
+- **🔒 Security Scan**: Vulnerability scanning with Trivy and pip-audit
+- **📦 Push to Registry**: Image push to GitHub Container Registry
+- **☸️ Deploy to EKS**: Automated Kubernetes deployment
+
+### Required Secrets
+
+Configure these secrets in your GitHub repository settings:
+
+```
+AWS_ACCESS_KEY_ID       # AWS IAM user access key
+AWS_SECRET_ACCESS_KEY   # AWS IAM user secret key
+AWS_REGION             # AWS region (e.g., us-west-2)
+EKS_CLUSTER_NAME       # Name of your EKS cluster
+```
+
+### Docker Image
+
+The application is automatically built and pushed to GitHub Container Registry:
+
+```bash
+# Pull the latest image
+docker pull ghcr.io/USERNAME/REPOSITORY:latest
+
+# Run locally
+docker run -p 8000:8000 ghcr.io/USERNAME/REPOSITORY:latest
+```
 
 ## License
 
