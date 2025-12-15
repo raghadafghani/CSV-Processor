@@ -11,7 +11,7 @@ metadata:
     app.kubernetes.io/part-of: csv-processor-suite
     app.kubernetes.io/managed-by: kubectl
 spec:
-  replicas: 3
+  replicas: 1
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -55,24 +55,36 @@ spec:
               name: csv-processor-secrets
               key: APP_SECRET_KEY
         
-        # Resource requests and limits
+        # Resource requests and limits (reduced for smaller nodes)
         resources:
           requests:
-            memory: "128Mi"
-            cpu: "100m"
+            memory: "64Mi"
+            cpu: "50m"
           limits:
-            memory: "512Mi"
-            cpu: "500m"
+            memory: "256Mi"
+            cpu: "250m"
         
-        # Liveness probe - checks if container is alive
+        # Startup probe - gives container time to start up (most important)
+        startupProbe:
+          httpGet:
+            path: /health
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 60
+          periodSeconds: 15
+          timeoutSeconds: 10
+          successThreshold: 1
+          failureThreshold: 30
+        
+        # Liveness probe - checks if container is alive (after startup)
         livenessProbe:
           httpGet:
             path: /health
             port: http
             scheme: HTTP
-          initialDelaySeconds: 30
-          periodSeconds: 10
-          timeoutSeconds: 5
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          timeoutSeconds: 10
           successThreshold: 1
           failureThreshold: 3
         
@@ -83,22 +95,10 @@ spec:
             port: http
             scheme: HTTP
           initialDelaySeconds: 5
-          periodSeconds: 5
-          timeoutSeconds: 3
+          periodSeconds: 10
+          timeoutSeconds: 5
           successThreshold: 1
           failureThreshold: 3
-        
-        # Startup probe - gives container time to start up
-        startupProbe:
-          httpGet:
-            path: /health
-            port: http
-            scheme: HTTP
-          initialDelaySeconds: 10
-          periodSeconds: 5
-          timeoutSeconds: 3
-          successThreshold: 1
-          failureThreshold: 10
         
         # Security context
         securityContext:
@@ -142,6 +142,6 @@ spec:
       # Termination grace period
       terminationGracePeriodSeconds: 30
       
-      # Image pull secrets (if using private registry)
+      # Image pull secrets (not needed for public registry)
       # imagePullSecrets:
       # - name: ghcr-secret

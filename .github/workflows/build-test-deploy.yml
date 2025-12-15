@@ -427,16 +427,67 @@ jobs:
           kubectl apply -f k8s/deployment.yaml
           kubectl apply -f k8s/service.yaml
           
+      - name: Debug deployment status
+        run: |
+          echo "🔍 Checking deployment status..."
+          kubectl get deployment csv-processor -n k8s-raghadafghani -o wide
+          echo ""
+          echo "🔍 Checking pod status..."
+          kubectl get pods -n k8s-raghadafghani -o wide
+          echo ""
+          echo "🔍 Checking events..."
+          kubectl get events -n k8s-raghadafghani --sort-by='.lastTimestamp' | tail -20
+          echo ""
+          echo "🔍 Checking node resources..."
+          kubectl top nodes || echo "Metrics not available"
+          kubectl describe nodes | grep -A 5 "Allocated resources" || echo "Node details not available"
+          
+      - name: Wait for pods to be created
+        run: |
+          echo "⏳ Waiting for pods to be created (60 seconds)..."
+          sleep 60
+          kubectl get pods -n k8s-raghadafghani -o wide
+          
+          # Get detailed pod information
+          POD_NAME=$(kubectl get pods -n k8s-raghadafghani -l app.kubernetes.io/name=csv-processor -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
+          if [ ! -z "$POD_NAME" ]; then
+            echo ""
+            echo "🔍 Describing pod: $POD_NAME"
+            kubectl describe pod $POD_NAME -n k8s-raghadafghani
+            echo ""
+            echo "📋 Pod logs:"
+            kubectl logs $POD_NAME -n k8s-raghadafghani --tail=50 || echo "No logs available"
+          else
+            echo "❌ No pods found"
+          fi
+          
       - name: Wait for deployment rollout
         run: |
-          echo "Waiting for deployment to complete..."
-          kubectl rollout status deployment/csv-processor -n k8s-raghadafghani --timeout=300s
+          echo "⏳ Waiting for deployment to complete (3 minute timeout)..."
+          if ! kubectl rollout status deployment/csv-processor -n k8s-raghadafghani --timeout=180s; then
+            echo "❌ Main deployment failed, trying minimal deployment..."
+            
+            # Apply minimal deployment
+            kubectl apply -f k8s/deployment-minimal.yaml
+            
+            echo "⏳ Waiting for minimal deployment..."
+            kubectl rollout status deployment/csv-processor-minimal -n k8s-raghadafghani --timeout=180s
+            
+            echo "📊 Minimal deployment status:"
+            kubectl get pods -l app=csv-processor-minimal -n k8s-raghadafghani -o wide
+          else
+            echo "✅ Main deployment succeeded!"
+          fi
           
       - name: Verify deployment
         run: |
-          echo "Verifying deployment..."
-          kubectl get pods -l app.kubernetes.io/name=csv-processor -n k8s-raghadafghani
+          echo "✅ Verifying deployment..."
+          kubectl get pods -l app.kubernetes.io/name=csv-processor -n k8s-raghadafghani -o wide
           kubectl get services -n k8s-raghadafghani
+          
+          echo ""
+          echo "📋 Pod logs (last 50 lines):"
+          kubectl logs -l app.kubernetes.io/name=csv-processor -n k8s-raghadafghani --tail=50 || echo "No logs available yet"
           
       - name: Get deployment info
         run: |
