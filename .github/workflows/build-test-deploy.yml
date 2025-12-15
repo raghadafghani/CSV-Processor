@@ -479,7 +479,7 @@ jobs:
           
       - name: Wait for pods to be created
         run: |
-          echo "⏳ Waiting for pods to be created (60 seconds)..."
+          echo "Waiting for pods to be created (60 seconds)..."
           sleep 60
           kubectl get pods -n k8s-raghadafghani -o wide
           
@@ -487,32 +487,32 @@ jobs:
           POD_NAME=$(kubectl get pods -n k8s-raghadafghani -l app=csv-processor-minimal -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
           if [ ! -z "$POD_NAME" ]; then
             echo ""
-            echo "🔍 Describing pod: $POD_NAME"
+            echo "Describing pod: $POD_NAME"
             kubectl describe pod $POD_NAME -n k8s-raghadafghani
             echo ""
-            echo "📋 Pod logs:"
+            echo "Pod logs:"
             kubectl logs $POD_NAME -n k8s-raghadafghani --tail=50 || echo "No logs available"
           else
-            echo "❌ No pods found"
+            echo "No pods found"
           fi
           
       - name: Wait for deployment rollout
         run: |
-          echo "⏳ Waiting for deployment to complete (3 minute timeout)..."
+          echo "Waiting for deployment to complete (3 minute timeout)..."
           kubectl rollout status deployment/csv-processor -n k8s-raghadafghani --timeout=180s
           
-          echo "✅ Deployment succeeded!"
-          echo "📊 Deployment status:"
+          echo "Deployment succeeded!"
+          echo "Deployment status:"
           kubectl get pods -l app.kubernetes.io/name=csv-processor -n k8s-raghadafghani -o wide
           
       - name: Verify deployment
         run: |
-          echo "✅ Verifying deployment..."
+          echo "Verifying deployment..."
           kubectl get pods -l app.kubernetes.io/name=csv-processor -n k8s-raghadafghani -o wide
           kubectl get services -n k8s-raghadafghani
           
           echo ""
-          echo "📋 Pod logs (last 50 lines):"
+          echo "Pod logs (last 50 lines):"
           kubectl logs -l app.kubernetes.io/name=csv-processor -n k8s-raghadafghani --tail=50 || echo "No logs available yet"
           
       - name: Get deployment info
@@ -520,12 +520,12 @@ jobs:
           # Get LoadBalancer URL
           EXTERNAL_IP=$(kubectl get service csv-processor-service -n k8s-raghadafghani -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || echo "pending")
           
-          echo "## 🎉 CSV Processor Deployed Successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "## CSV Processor Deployed Successfully!" >> $GITHUB_STEP_SUMMARY
           
           if [ "$EXTERNAL_IP" != "pending" ] && [ "$EXTERNAL_IP" != "" ]; then
-            echo "### 🌐 **YOUR APP IS LIVE!**" >> $GITHUB_STEP_SUMMARY
+            echo "###  **YOUR APP IS LIVE!**" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "# 🔗 **[CLICK HERE TO OPEN YOUR CSV PROCESSOR](http://$EXTERNAL_IP)**" >> $GITHUB_STEP_SUMMARY
+            echo "#  **[CLICK HERE TO OPEN YOUR CSV PROCESSOR](http://$EXTERNAL_IP)**" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "**Direct URL**: \`http://$EXTERNAL_IP\`" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
@@ -534,22 +534,22 @@ jobs:
             # Also output to console for easy copying
             echo ""
             echo "🎉 SUCCESS! Your CSV Processor is live at:"
-            echo "🔗 http://$EXTERNAL_IP"
+            echo " http://$EXTERNAL_IP"
             echo ""
           else
             echo "### ⏳ LoadBalancer IP pending..." >> $GITHUB_STEP_SUMMARY
             echo "Run \`kubectl get service csv-processor-service -n k8s-raghadafghani\` to check status" >> $GITHUB_STEP_SUMMARY
           fi
           
-          echo "### 📊 Deployment Status:" >> $GITHUB_STEP_SUMMARY
+          echo "###  Deployment Status:" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           kubectl get deployment csv-processor -n k8s-raghadafghani -o wide >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          echo "### 🏃 Running Pods:" >> $GITHUB_STEP_SUMMARY
+          echo "### Running Pods:" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           kubectl get pods -l app.kubernetes.io/name=csv-processor -n k8s-raghadafghani >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          echo "### 🌐 Services:" >> $GITHUB_STEP_SUMMARY
+          echo "### Services:" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           kubectl get services -n k8s-raghadafghani >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY

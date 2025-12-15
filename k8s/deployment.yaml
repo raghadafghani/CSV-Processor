@@ -33,6 +33,7 @@ spec:
       - name: csv-processor
         # ✅ Container image from GHCR (the one i pushed)
         image: ghcr.io/raghadafghani/csv-processor:main
+        imagePullPolicy: Always
         
         ports:
         - name: http

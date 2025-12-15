@@ -1,5 +1,4 @@
 # Temporary ignore for CVE-2025-62727
 # Reason: FastAPI doesn't yet support Starlette 0.49.1+ which contains the fix
-# TODO: Remove this ignore once FastAPI releases a compatible version
 # Tracked issue: https://github.com/tiangolo/fastapi/issues/
 CVE-2025-62727
