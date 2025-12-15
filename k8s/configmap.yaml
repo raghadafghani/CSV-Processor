@@ -6,14 +6,15 @@ metadata:
   labels:
     app.kubernetes.io/name: csv-processor
     app.kubernetes.io/instance: production
-    app.kubernetes.io/component: configuration
 data:
-  # Application Environment
+  
+  # ✅ APP_ENV=production
   APP_ENV: "production"
   
-  # Logging Configuration
+  # ✅ LOG_LEVEL=info
   LOG_LEVEL: "info"
   
+  # ✅ Custom config your app needs
   # Server Configuration
   HOST: "0.0.0.0"
   PORT: "8000"
@@ -25,13 +26,6 @@ data:
   # Static Files
   STATIC_DIR: "static"
   
-  # Application Settings
+  # CSV Processing Settings
   MAX_FILE_SIZE: "10485760"  # 10MB in bytes
   ALLOWED_EXTENSIONS: "csv,txt"
-  
-  # Health Check Settings
-  HEALTH_CHECK_TIMEOUT: "30"
-  
-  # Performance Settings
-  WORKERS: "2"
-  WORKER_CONNECTIONS: "1000"

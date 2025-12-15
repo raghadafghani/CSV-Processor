@@ -1,6 +1,9 @@
 name: Build, Test & Deploy
 
-# Trigger on: push to main, pull requests
+# ==========================================
+# PIPELINE TRIGGERS
+# ✅ Trigger on: push to main, pull requests
+# ==========================================
 on:
   push:
     branches: [ main ]
@@ -19,9 +22,14 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  # Stage 1: Checkout & Setup
+  # ==========================================
+  # Stage 1: Checkout & Setup (5 min)
+  # ✅ Trigger on: push to main, pull requests
+  # ✅ Checkout code
+  # ✅ Set up language runtime (Python)
+  # ==========================================
   setup:
-    name: "Checkout & Setup"
+    name: "Stage 1: Checkout & Setup"
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
@@ -48,9 +56,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
-  # Stage 2: Test
+  # ==========================================
+  # Stage 2: Test (5 min)
+  # ✅ Install dependencies
+  # ✅ Run unit tests
+  # ✅ Generate test report
+  # ✅ Fail workflow if tests fail (never skip!)
+  # ==========================================
   test:
-    name: "Run Tests"
+    name: "Stage 2: Test"
     runs-on: ubuntu-latest
     needs: setup
     timeout-minutes: 5
@@ -117,9 +131,14 @@ jobs:
           echo "- Coverage report generated" >> $GITHUB_STEP_SUMMARY
           echo "- JUnit XML results uploaded" >> $GITHUB_STEP_SUMMARY
 
-  # Stage 3: Build
+  # ==========================================
+  # Stage 3: Build (5 min)
+  # ✅ Build Docker image
+  # ✅ Image tagged: ghcr.io/USERNAME/appname:latest
+  # ✅ Image tagged: ghcr.io/USERNAME/appname:${{ github.sha }}
+  # ==========================================
   build:
-    name: "🏗️ Build Docker Image"
+    name: "Stage 3: Build"
     runs-on: ubuntu-latest
     needs: [setup, test]
     timeout-minutes: 5
@@ -172,9 +191,15 @@ jobs:
           path: /tmp/image.tar
           retention-days: 1
 
-  # Stage 4: Security Scan
+  # ==========================================
+  # Stage 4: Security Scan (3 min)
+  # ✅ Scan image with Trivy (free, open-source)
+  # ✅ Scan dependencies with pip-audit
+  # ✅ Report vulnerabilities
+  # ✅ FAIL if critical vulnerabilities found
+  # ==========================================
   security-scan:
-    name: "🔒 Security Scan"
+    name: "Stage 4: Security Scan"
     runs-on: ubuntu-latest
     needs: [build]
     timeout-minutes: 3
@@ -261,9 +286,14 @@ jobs:
             fi
           fi
 
-  # Stage 5: Push to Registry
+  # ==========================================
+  # Stage 5: Push to Registry (2 min)
+  # ✅ Authenticate to GitHub Container Registry (GHCR)
+  # ✅ Push image with both tags (latest + commit SHA)
+  # ✅ Only push on main branch (not PRs) - security
+  # ==========================================
   push-registry:
-    name: "📦 Push to Registry"
+    tage 5: Push to Registry"
     runs-on: ubuntu-latest
     needs: [build, security-scan]
     timeout-minutes: 2
@@ -318,9 +348,16 @@ jobs:
           echo "- **Main Tag**: \`${{ env.REGISTRY }}/${IMAGE_NAME_LOWER}:main\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Registry**: GitHub Container Registry" >> $GITHUB_STEP_SUMMARY
 
-  # Stage 6: Deploy to EKS
+  # ==========================================
+  # Stage 6: Deploy to EKS (5 min)
+  # ✅ Authenticate to AWS (using IAM user credentials)
+  # ✅ Configure kubectl context
+  # ✅ Deploy/update Kubernetes manifests
+  # ✅ Verify deployment (wait for rollout)
+  # ✅ Show deployed app info
+  # ==========================================
   deploy-eks:
-    name: "Deploy to EKS"
+    name: "Stage 6: Deploy to EKS"
     runs-on: ubuntu-latest
     needs: [push-registry]
     timeout-minutes: 5
@@ -413,8 +450,8 @@ jobs:
       - name: Update image tag in deployment
         run: |
           IMAGE_NAME_LOWER=$(echo "${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]')
-          # Update the image tag in deployment-minimal.yaml to use the latest built image
-          sed -i "s|ghcr.io/raghadafghani/csv-processor:main|${{ env.REGISTRY }}/${IMAGE_NAME_LOWER}:main|g" k8s/deployment-minimal.yaml
+          # Update the image tag in deployment.yaml to use the latest built image
+          sed -i "s|ghcr.io/raghadafghani/csv-processor:main|${{ env.REGISTRY }}/${IMAGE_NAME_LOWER}:main|g" k8s/deployment.yaml
           
       - name: Deploy to Kubernetes
         run: |
@@ -423,14 +460,13 @@ jobs:
           # Apply manifests in order
           kubectl apply -f k8s/namespace.yaml
           kubectl apply -f k8s/configmap.yaml
-          kubectl apply -f k8s/secret.yaml
-          kubectl apply -f k8s/deployment-minimal.yaml
+          kubectl apply -f k8s/deployment.yaml
           kubectl apply -f k8s/service.yaml
           
       - name: Debug deployment status
         run: |
-          echo "🔍 Checking minimal deployment status..."
-          kubectl get deployment csv-processor-minimal -n k8s-raghadafghani -o wide
+          echo "🔍 Checking deployment status..."
+          kubectl get deployment csv-processor -n k8s-raghadafghani -o wide
           echo ""
           echo "🔍 Checking pod status..."
           kubectl get pods -n k8s-raghadafghani -o wide
@@ -462,50 +498,58 @@ jobs:
           
       - name: Wait for deployment rollout
         run: |
-          echo "⏳ Waiting for minimal deployment to complete (3 minute timeout)..."
-          kubectl rollout status deployment/csv-processor-minimal -n k8s-raghadafghani --timeout=180s
+          echo "⏳ Waiting for deployment to complete (3 minute timeout)..."
+          kubectl rollout status deployment/csv-processor -n k8s-raghadafghani --timeout=180s
           
-          echo "✅ Minimal deployment succeeded!"
+          echo "✅ Deployment succeeded!"
           echo "📊 Deployment status:"
-          kubectl get pods -l app=csv-processor-minimal -n k8s-raghadafghani -o wide
+          kubectl get pods -l app.kubernetes.io/name=csv-processor -n k8s-raghadafghani -o wide
           
       - name: Verify deployment
         run: |
-          echo "✅ Verifying minimal deployment..."
-          kubectl get pods -l app=csv-processor-minimal -n k8s-raghadafghani -o wide
+          echo "✅ Verifying deployment..."
+          kubectl get pods -l app.kubernetes.io/name=csv-processor -n k8s-raghadafghani -o wide
           kubectl get services -n k8s-raghadafghani
           
           echo ""
           echo "📋 Pod logs (last 50 lines):"
-          kubectl logs -l app=csv-processor-minimal -n k8s-raghadafghani --tail=50 || echo "No logs available yet"
+          kubectl logs -l app.kubernetes.io/name=csv-processor -n k8s-raghadafghani --tail=50 || echo "No logs available yet"
           
       - name: Get deployment info
         run: |
-          echo "## 🎉 EKS Deployment Successful!" >> $GITHUB_STEP_SUMMARY
-          echo "### Namespace:" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          kubectl get namespace k8s-raghadafghani >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          echo "### Deployment Details:" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          kubectl get deployment csv-processor-minimal -n k8s-raghadafghani -o wide >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          echo "### Pods:" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          kubectl get pods -l app=csv-processor-minimal -n k8s-raghadafghani >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          echo "### Services:" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          kubectl get services -n k8s-raghadafghani >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          
-          # Get LoadBalancer URL if available
+          # Get LoadBalancer URL
           EXTERNAL_IP=$(kubectl get service csv-processor-service -n k8s-raghadafghani -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || echo "pending")
+          
+          echo "## 🎉 CSV Processor Deployed Successfully!" >> $GITHUB_STEP_SUMMARY
+          
           if [ "$EXTERNAL_IP" != "pending" ] && [ "$EXTERNAL_IP" != "" ]; then
-            echo "### 🌐 Application URL:" >> $GITHUB_STEP_SUMMARY
-            echo "**http://$EXTERNAL_IP**" >> $GITHUB_STEP_SUMMARY
-            echo "**https://$EXTERNAL_IP**" >> $GITHUB_STEP_SUMMARY
+            echo "### 🌐 **YOUR APP IS LIVE!**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "# 🔗 **[CLICK HERE TO OPEN YOUR CSV PROCESSOR](http://$EXTERNAL_IP)**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Direct URL**: \`http://$EXTERNAL_IP\`" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "---" >> $GITHUB_STEP_SUMMARY
+            
+            # Also output to console for easy copying
+            echo ""
+            echo "🎉 SUCCESS! Your CSV Processor is live at:"
+            echo "🔗 http://$EXTERNAL_IP"
+            echo ""
           else
             echo "### ⏳ LoadBalancer IP pending..." >> $GITHUB_STEP_SUMMARY
             echo "Run \`kubectl get service csv-processor-service -n k8s-raghadafghani\` to check status" >> $GITHUB_STEP_SUMMARY
           fi
+          
+          echo "### 📊 Deployment Status:" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          kubectl get deployment csv-processor -n k8s-raghadafghani -o wide >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "### 🏃 Running Pods:" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          kubectl get pods -l app.kubernetes.io/name=csv-processor -n k8s-raghadafghani >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "### 🌐 Services:" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          kubectl get services -n k8s-raghadafghani >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY

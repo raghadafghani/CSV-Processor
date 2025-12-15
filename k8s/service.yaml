@@ -6,62 +6,21 @@ metadata:
   labels:
     app.kubernetes.io/name: csv-processor
     app.kubernetes.io/instance: production
-    app.kubernetes.io/version: "1.0.0"
-    app.kubernetes.io/component: service
-    app.kubernetes.io/part-of: csv-processor-suite
-    app.kubernetes.io/managed-by: kubectl
-  annotations:
-    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
-    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
-    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: "http"
 spec:
+  # ✅ Service type: LoadBalancer (for external access)
   type: LoadBalancer
-  sessionAffinity: None  # Stateless application
   
-  # Port configuration
+  # ✅ Session affinity: None (stateless app)
+  sessionAffinity: None
+  
+  # ✅ Port mapping (container port → service port)
   ports:
   - name: http
     port: 80          # External port (what clients connect to)
-    targetPort: http  # Container port (references the named port in deployment)
-    protocol: TCP
-  - name: https
-    port: 443
-    targetPort: http  # Still routes to HTTP container port
+    targetPort: http  # Container port (references port 8000 in deployment)
     protocol: TCP
   
-  # Selector to match deployment pods
-  selector:
-    app.kubernetes.io/name: csv-processor
-    app.kubernetes.io/instance: production
-  
-  # Load balancer configuration
-  loadBalancerSourceRanges:
-  - 0.0.0.0/0  # Allow traffic from anywhere (adjust for security)
-  
-  # External traffic policy
-  externalTrafficPolicy: Cluster
-
----
-# Internal service for pod-to-pod communication (if needed)
-apiVersion: v1
-kind: Service
-metadata:
-  name: csv-processor-internal
-  namespace: k8s-raghadafghani
-  labels:
-    app.kubernetes.io/name: csv-processor
-    app.kubernetes.io/instance: production
-    app.kubernetes.io/component: internal-service
-spec:
-  type: ClusterIP
-  sessionAffinity: None
-  
-  ports:
-  - name: http
-    port: 8000
-    targetPort: http
-    protocol: TCP
-  
+  # ✅ Selector matches deployment labels
   selector:
     app.kubernetes.io/name: csv-processor
     app.kubernetes.io/instance: production

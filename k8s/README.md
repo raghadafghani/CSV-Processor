@@ -6,91 +6,76 @@ This directory contains all Kubernetes manifests required to deploy the CSV Proc
 
 ### `namespace.yaml`
 - **Purpose**: Creates dedicated namespace `k8s-raghadafghani`
-- **Features**: Proper labels and annotations for organization
+- **Features**: Essential labels for organization and management
 - **Usage**: Isolates application resources
 
 ### `configmap.yaml`
 - **Purpose**: Non-sensitive configuration data
-- **Contains**: 
-  - Application environment settings
-  - Server configuration
-  - CORS settings
-  - Performance tuning parameters
-- **Usage**: Mounted as environment variables
-
-### `secret.yaml`
-- **Purpose**: Sensitive configuration data (base64 encoded)
-- **Contains**: 
-  - API keys (placeholder)
-  - Database credentials (placeholder)
-  - Application secret key
-- **Security**: Never commit real secrets to Git!
+- **Requirements Met**:
+  - ✅ Configuration data (not secrets!)
+  - ✅ APP_ENV=production
+  - ✅ LOG_LEVEL=info
+  - ✅ Custom config your app needs
+- **Contains**: Server settings, CORS config, file processing limits
 
 ### `deployment.yaml`
 - **Purpose**: Main application deployment
-- **Features**:
-  - 3 replicas for high availability
-  - Rolling update strategy
-  - Resource requests/limits
-  - Health check probes (liveness, readiness, startup)
-  - Security context (non-root user)
-  - ConfigMap and Secret integration
+- **Requirements Met**:
+  - ✅ Deployment with 2+ replicas
+  - ✅ Container image from GHCR (the one you pushed)
+  - ✅ Resource requests/limits (CPU & memory)
+  - ✅ Environment variables from ConfigMap
+  - ✅ Health check probes (livenessProbe, readinessProbe)
+  - ✅ Rolling update strategy
+  - ✅ Labels and selectors properly configured
+- **Features**: Security context, non-root user, proper resource management
 
 ### `service.yaml`
 - **Purpose**: Network access to the application
-- **Features**:
-  - LoadBalancer type for external access
-  - Internal ClusterIP service for pod-to-pod communication
-  - Port mapping (80/443 → 8000)
-  - AWS Load Balancer annotations
+- **Requirements Met**:
+  - ✅ Service type: LoadBalancer (for external access)
+  - ✅ Port mapping (container port → service port)
+  - ✅ Selector matches deployment labels
+  - ✅ Session affinity: None (stateless app)
+- **Features**: External LoadBalancer for internet access
 
-## 🚀 Deployment Order
+## 🚀 Automated Deployment
 
-The manifests should be applied in this order:
+**No manual deployment needed!** Everything is handled by GitHub Actions:
 
-```bash
-kubectl apply -f namespace.yaml
-kubectl apply -f configmap.yaml
-kubectl apply -f secret.yaml
-kubectl apply -f deployment.yaml
-kubectl apply -f service.yaml
 ```
+git push → GitHub Actions → Automated Deployment to EKS
+```
+
+The CI/CD pipeline automatically:
+1. Builds and tests your application
+2. Creates Docker image and pushes to GHCR
+3. Applies all Kubernetes manifests
+4. Provides live URL for your application
 
 ## 🔧 Configuration
 
 ### Resource Requirements
-- **CPU**: 100m request, 500m limit
-- **Memory**: 128Mi request, 512Mi limit
-- **Storage**: 1Gi temporary cache volume
+- **CPU**: 50m request, 250m limit per pod
+- **Memory**: 64Mi request, 256Mi limit per pod
+- **Replicas**: 2 pods for high availability
 
-### Health Checks
-- **Startup Probe**: 10s delay, 5s interval, 10 failures max
-- **Liveness Probe**: 30s delay, 10s interval, 3 failures max
-- **Readiness Probe**: 5s delay, 5s interval, 3 failures max
 
-### Security Features
-- Non-root user (UID 1001)
-- Read-only root filesystem capability
-- Dropped ALL capabilities
-- Security context applied
+## Access
 
-## 🌐 Access
+After deployment, our CSV Processor App is available at the LoadBalancer URL shown in GitHub Actions output.
 
-After deployment, the application will be available at:
-- **HTTP**: `http://<LoadBalancer-IP>`
-- **HTTPS**: `https://<LoadBalancer-IP>` (if SSL configured)
+## Monitoring
 
-Check LoadBalancer IP:
+Check deployment status:
 ```bash
-kubectl get service csv-processor-service -n k8s-raghadafghani
+kubectl get all -n k8s-raghadafghani
 ```
 
-## 📊 Monitoring
-
-The deployment includes annotations for Prometheus monitoring:
-- Scrape endpoint: `/health`
-- Port: `8000`
-- Enabled by default
+View application logs:
+```bash
+kubectl logs -l app.kubernetes.io/name=csv-processor -n k8s-raghadafghani
+```
 
 ## 🔍 Troubleshooting
 
@@ -104,20 +89,20 @@ kubectl get deployment csv-processor -n k8s-raghadafghani
 kubectl logs -l app.kubernetes.io/name=csv-processor -n k8s-raghadafghani
 ```
 
-### Check pod status:
+### Check service status:
 ```bash
-kubectl get pods -l app.kubernetes.io/name=csv-processor -n k8s-raghadafghani
+kubectl get service csv-processor-service -n k8s-raghadafghani
 ```
 
-### Describe deployment:
+### Get LoadBalancer URL:
 ```bash
-kubectl describe deployment csv-processor -n k8s-raghadafghani
+kubectl get service csv-processor-service -n k8s-raghadafghani -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
 ```
 
-## 🔄 Updates
+## Updates
 
-To update the application:
-1. Push new image to registry
-2. Update image tag in `deployment.yaml`
-3. Apply the deployment: `kubectl apply -f deployment.yaml`
-4. Monitor rollout: `kubectl rollout status deployment/csv-processor -n k8s-raghadafghani`
+Updates are handled automatically through GitHub Actions. When we push code changes:
+1. New Docker image is built
+2. Kubernetes performs rolling update
+3. Zero downtime deployment
+4. Health checks ensure smooth transition
