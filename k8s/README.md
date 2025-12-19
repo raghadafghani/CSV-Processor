@@ -6,7 +6,7 @@ This directory contains all Kubernetes manifests required to deploy the CSV Proc
 
 ### `namespace.yaml`
 - **Purpose**: Creates dedicated namespace `k8s-raghadafghani`
-- **Features**: Essential labels for organization and management
+- **Features**: Esential labels for organizastion and management
 - **Usage**: Isolates application resources
 
 ### `configmap.yaml`
@@ -39,7 +39,7 @@ This directory contains all Kubernetes manifests required to deploy the CSV Proc
   - ✅ Session affinity: None (stateless app)
 - **Features**: External LoadBalancer for internet access
 
-## 🚀 Automated Deployment
+## Automated Deployment
 
 **No manual deployment needed!** Everything is handled by GitHub Actions:
 
@@ -48,12 +48,12 @@ git push → GitHub Actions → Automated Deployment to EKS
 ```
 
 The CI/CD pipeline automatically:
-1. Builds and tests your application
+1. Builds and tests the application
 2. Creates Docker image and pushes to GHCR
 3. Applies all Kubernetes manifests
-4. Provides live URL for your application
+4. Provides live URL for the application
 
-## 🔧 Configuration
+## Configuration
 
 ### Resource Requirements
 - **CPU**: 50m request, 250m limit per pod
@@ -63,7 +63,7 @@ The CI/CD pipeline automatically:
 
 ## Access
 
-After deployment, our CSV Processor App is available at the LoadBalancer URL shown in GitHub Actions output.
+After deployment, the CSV Processor App is available at the LoadBalancer URL
 
 ## Monitoring
 
@@ -77,7 +77,7 @@ View application logs:
 kubectl logs -l app.kubernetes.io/name=csv-processor -n k8s-raghadafghani
 ```
 
-## 🔍 Troubleshooting
+## Troubleshooting
 
 ### Check deployment status:
 ```bash

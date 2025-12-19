@@ -2,12 +2,11 @@
 
 A production-ready CSV processing web application with enterprise-grade CI/CD pipeline and Kubernetes deployment.
 
-## 🚀 Live Application
+## Live Application
 
-**🌐 Access the CSV Processor:** http://a424d066df9c54ab9bb097d96fdda4ee-1106723345.us-west-2.elb.amazonaws.com/static/index.html
+**🌐 Access the CSV Processor:** http://a424d066df9c54ab9bb097d96fdda4ee-1106723345.us-west-2.elb.amazonaws.com
 
-
-## ✨ Features
+## Features
 
 ### **CSV Processing Operations**
 
@@ -44,7 +43,7 @@ A production-ready CSV processing web application with enterprise-grade CI/CD pi
 git push → GitHub Actions → Docker Build → Security Scan → Deploy to EKS
 ```
 
-## 📦 Docker
+## Docker
 
 ### **Dockerfile Requirements Met:**
 - ✅ Multi-stage build for smaller image (<200MB)
@@ -55,7 +54,7 @@ git push → GitHub Actions → Docker Build → Security Scan → Deploy to EKS
 - ✅ Build context minimization
 
 
-## ☸️ Kubernetes
+## Kubernetes
 
 ### **Deployment Requirements Met:**
 - ✅ 2+ replicas for high availability
